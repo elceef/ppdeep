@@ -35,16 +35,16 @@ import os
 from io import BytesIO
 
 
-BLOCK_MIN = 3
+BLOCKSIZE_MIN = 3
 SPAMSUM_LENGTH = 64
-HASH_PRIME = 0x01000193
-HASH_INIT = 0x28021967
-ROLL_WINDOW = 7
-B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
 
 def spamsum(stream, slen):
-	STREAM_BUFF_SIZE = 65536
+	STREAM_BUFF_SIZE = 8192
+	HASH_PRIME = 0x01000193
+	HASH_INIT = 0x28021967
+	ROLL_WINDOW = 7
+	B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
 	roll_win = bytearray(ROLL_WINDOW)
 	roll_h1 = int()
@@ -57,13 +57,13 @@ def spamsum(stream, slen):
 	block_hash1 = int(HASH_INIT)
 	block_hash2 = int(HASH_INIT)
 
-	bs = BLOCK_MIN
+	bs = BLOCKSIZE_MIN
 	while (bs * SPAMSUM_LENGTH) < slen:
 		bs = bs * 2
 	block_size = bs
 
 	while True:
-		if block_size < BLOCK_MIN:
+		if block_size < BLOCKSIZE_MIN:
 			raise RuntimeError('Calculated block size is too small')
 
 		stream.seek(0)
@@ -93,7 +93,7 @@ def spamsum(stream, slen):
 
 			buf = stream.read(STREAM_BUFF_SIZE)
 
-		if block_size > BLOCK_MIN and len(hash_string1) < (SPAMSUM_LENGTH // 2):
+		if block_size > BLOCKSIZE_MIN and len(hash_string1) < (SPAMSUM_LENGTH // 2):
 			block_size = (block_size // 2)
 
 			roll_win = bytearray(ROLL_WINDOW)
@@ -159,8 +159,8 @@ def score_strings(s1, s2, block_size):
 	score = (score * SPAMSUM_LENGTH) // (len(s1) + len(s2))
 	score = (100 * score) // SPAMSUM_LENGTH
 	score = 100 - score
-	if score > (block_size // BLOCK_MIN * min([len(s1), len(s2)])):
-		score = block_size // BLOCK_MIN * min([len(s1), len(s2)])
+	if score > (block_size // BLOCKSIZE_MIN * min([len(s1), len(s2)])):
+		score = block_size // BLOCKSIZE_MIN * min([len(s1), len(s2)])
 	return score
 
 
