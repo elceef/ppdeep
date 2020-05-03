@@ -7,14 +7,14 @@ tool. At a very high level, fuzzy hashing is a way to determine whether two
 inputs are similar, rather than identical. Fuzzy hashes are widely adopted in
 digital forensics and malware detection.
 
-This implementation is based on SpamSum by Dr. Andrews Tridgell.
+This implementation is based on SpamSum by Dr. Andrew Tridgell.
 
 Usage
 -----
 
 To compute a fuzzy hash, simply use `hash()` function:
 
-```python
+```
 >>> import ppdeep
 >>> h1 = ppdeep.hash('The equivalence of mass and energy translates into the well-known E = mc²')
 >>> h1
@@ -27,7 +27,7 @@ To compute a fuzzy hash, simply use `hash()` function:
 To calculate level of similarity, use `compare()` function which returns an
 integer value from 0 to 100 (full match):
 
-```python
+```
 >>> ppdeep.compare(h1, h2)
 29
 ```
@@ -35,7 +35,22 @@ integer value from 0 to 100 (full match):
 Function `hash_from_file()` accepts a filename as argument and calculates the
 hash of the contents of the file:
 
-```python
+```
 >>> ppdeep.hash_from_file('.bash_history')
 '1536:EXM36dG36x3KW732vOAcg3EP1qKlKozcK0z5G+lEPTssl/7eO7HOBF:tKlKozcWT0'
+```
+
+Installation
+------------
+
+```
+$ pip install ppdeep
+```
+
+If you want to use the latest version of the code, you can install it from Git:
+
+```
+$ git clone https://github.com/elceef/ppdeep.git
+$ cd ppdeep
+$ pip install .
 ```
