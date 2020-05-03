@@ -12,7 +12,7 @@
 Pure-Python library for computing fuzzy hashes (ssdeep)
 
 Created by Marcin Ulikowski <marcin@ulikowski.pl>
-Based on SpamSum by Dr. Andrews Tridgell
+Based on SpamSum by Dr. Andrew Tridgell
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -123,6 +123,8 @@ def hash(buf):
 
 
 def hash_from_file(filename):
+	if not isinstance(filename, str):
+		raise TypeError('Argument must be of string type, not %r' % type(filename))
 	if not os.path.isfile(filename):
 		raise IOError('File not found')
 	if not os.access(filename, os.R_OK):
@@ -164,7 +166,7 @@ def score_strings(s1, s2, block_size):
 
 def compare(hash1, hash2):
 	if not (isinstance(hash1, str) and isinstance(hash2, str)):
-		raise TypeError('Arguments must be of string type, not %r' % type(buf))
+		raise TypeError('Arguments must be of string type')
 	try:
 		hash1_bs, hash1_s1, hash1_s2 = hash1.split(':')
 		hash2_bs, hash2_s1, hash2_s2 = hash2.split(':')
