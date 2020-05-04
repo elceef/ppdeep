@@ -154,7 +154,54 @@ def _levenshtein(s, t):
 	return v1[len(t)]
 
 
+class _RollState(object):
+	ROLL_WINDOW = 7
+
+	def __init__(self):
+		self.win = bytearray(self.ROLL_WINDOW)
+		self.h1 = int()
+		self.h2 = int()
+		self.h3 = int()
+		self.n = int()
+
+	def roll_hash(self, b):
+		self.h2 = self.h2 - self.h1 + (self.ROLL_WINDOW * b)
+		self.h1 = self.h1 + b - self.win[self.n % self.ROLL_WINDOW]
+		self.win[self.n % self.ROLL_WINDOW] = b
+		self.n += 1
+		self.h3 = (self.h3 << 5) & 0xFFFFFFFF
+		self.h3 ^= b
+		return self.h1 + self.h2 + self.h3
+
+
+def _common_substring(s1, s2):
+	ROLL_WINDOW = 7
+	hashes = list()
+
+	roll = _RollState()
+	for i in range(len(s1)):
+		b = ord(s1[i])
+		hashes.append(roll.roll_hash(b))
+
+	roll = _RollState()
+	for i in range(len(s2)):
+		b = ord(s2[i])
+		rh = roll.roll_hash(b)
+		if i < (ROLL_WINDOW - 1):
+			continue
+		for j in range(ROLL_WINDOW-1, len(hashes)):
+			if hashes[j] != 0 and hashes[j] == rh:
+				ir = i - (ROLL_WINDOW - 1)
+				jr = j - (ROLL_WINDOW - 1)
+				if (len(s2[ir:]) >= ROLL_WINDOW and
+					s2[ir:ir+ROLL_WINDOW] == s1[jr:jr+ROLL_WINDOW]):
+					return True
+	return False
+
+
 def _score_strings(s1, s2, block_size):
+	if _common_substring(s1, s2) == False:
+		return 0
 	score = _levenshtein(s1, s2)
 	score = (score * SPAMSUM_LENGTH) // (len(s1) + len(s2))
 	score = (100 * score) // SPAMSUM_LENGTH
@@ -162,6 +209,14 @@ def _score_strings(s1, s2, block_size):
 	if score > (block_size // BLOCKSIZE_MIN * min([len(s1), len(s2)])):
 		score = block_size // BLOCKSIZE_MIN * min([len(s1), len(s2)])
 	return score
+
+
+def _strip_sequences(s):
+	r = s[:3]
+	for i in range(3, len(s)):
+		if (s[i] != s[i-1] or s[i] != s[i-2] or s[i] != s[i-3]):
+			r += s[i]
+	return r
 
 
 def compare(hash1, hash2):
@@ -177,6 +232,12 @@ def compare(hash1, hash2):
 
 	if hash1_bs != hash2_bs and hash1_bs != (hash2_bs * 2) and hash2_bs != (hash1_bs * 2):
 		return 0
+
+	hash1_s1 = _strip_sequences(hash1_s1)
+	hash1_s2 = _strip_sequences(hash1_s2)
+	hash2_s1 = _strip_sequences(hash2_s1)
+	hash2_s2 = _strip_sequences(hash2_s2)
+
 	if hash1_bs == hash2_bs and hash1_s1 == hash2_s1:
 		return 100
 
