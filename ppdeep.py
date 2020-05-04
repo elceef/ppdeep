@@ -39,7 +39,7 @@ BLOCKSIZE_MIN = 3
 SPAMSUM_LENGTH = 64
 
 
-def spamsum(stream, slen):
+def _spamsum(stream, slen):
 	STREAM_BUFF_SIZE = 8192
 	HASH_PRIME = 0x01000193
 	HASH_INIT = 0x28021967
@@ -119,7 +119,7 @@ def hash(buf):
 		buf = buf.encode()
 	else:
 		raise TypeError('Argument must be of bytes or string type, not %r' % type(buf))
-	return spamsum(BytesIO(buf), len(buf))
+	return _spamsum(BytesIO(buf), len(buf))
 
 
 def hash_from_file(filename):
@@ -130,10 +130,10 @@ def hash_from_file(filename):
 	if not os.access(filename, os.R_OK):
 		raise IOError('File is not readable')
 	fsize = os.stat(filename).st_size
-	return spamsum(open(filename, 'rb'), fsize)
+	return _spamsum(open(filename, 'rb'), fsize)
 
 
-def levenshtein(s, t):
+def _levenshtein(s, t):
 	'''
 	Implementation by Christopher P. Matthews
 	'''
@@ -154,8 +154,8 @@ def levenshtein(s, t):
 	return v1[len(t)]
 
 
-def score_strings(s1, s2, block_size):
-	score = levenshtein(s1, s2)
+def _score_strings(s1, s2, block_size):
+	score = _levenshtein(s1, s2)
 	score = (score * SPAMSUM_LENGTH) // (len(s1) + len(s2))
 	score = (100 * score) // SPAMSUM_LENGTH
 	score = 100 - score
@@ -182,15 +182,15 @@ def compare(hash1, hash2):
 		return 100
 
 	if hash1_bs == hash2_bs:
-		score1 = score_strings(hash1_s1, hash2_s1, hash1_bs)
-		score2 = score_strings(hash1_s2, hash2_s2, hash2_bs)
+		score1 = _score_strings(hash1_s1, hash2_s1, hash1_bs)
+		score2 = _score_strings(hash1_s2, hash2_s2, hash2_bs)
 		score = int(max([score1, score2]))
 		return score
 	elif hash1_bs == (hash2_bs * 2):
-		score = int(score_strings(hash1_s1, hash2_s2, hash1_bs))
+		score = int(_score_strings(hash1_s1, hash2_s2, hash1_bs))
 		return score
 	else:
-		score = int(score_strings(hash1_s2, hash2_s1, hash2_bs))
+		score = int(_score_strings(hash1_s2, hash2_s1, hash2_bs))
 		return score
 	return 0
 
