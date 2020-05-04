@@ -170,11 +170,10 @@ def compare(hash1, hash2):
 	try:
 		hash1_bs, hash1_s1, hash1_s2 = hash1.split(':')
 		hash2_bs, hash2_s1, hash2_s2 = hash2.split(':')
+		hash1_bs = int(hash1_bs)
+		hash2_bs = int(hash2_bs)
 	except ValueError:
-		raise ValueError('Invalid hash format')
-
-	hash1_bs = int(hash1_bs)
-	hash2_bs = int(hash2_bs)
+		raise ValueError('Invalid hash format') from None
 
 	if hash1_bs != hash2_bs and hash1_bs != (hash2_bs * 2) and hash2_bs != (hash1_bs * 2):
 		return 0
