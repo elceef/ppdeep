@@ -28,7 +28,7 @@ limitations under the License.
 '''
 
 __title__ = 'ppdeep'
-__version__ = '20200503'
+__version__ = '20200505'
 __author__ = 'Marcin Ulikowski'
 
 import os
