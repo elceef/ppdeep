@@ -29,7 +29,7 @@ integer value from 0 to 100 (full match):
 
 ```
 >>> ppdeep.compare(h1, h2)
-29
+34
 ```
 
 Function `hash_from_file()` accepts a filename as argument and calculates the
