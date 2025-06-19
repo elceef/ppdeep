@@ -243,7 +243,7 @@ def compare(hash1, hash2):
 
 	if hash1_bs == hash2_bs:
 		score1 = _score_strings(hash1_s1, hash2_s1, hash1_bs)
-		score2 = _score_strings(hash1_s2, hash2_s2, hash2_bs)
+		score2 = _score_strings(hash1_s2, hash2_s2, hash2_bs*2)
 		score = int(max([score1, score2]))
 		return score
 	elif hash1_bs == (hash2_bs * 2):
