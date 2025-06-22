@@ -44,18 +44,7 @@ def _spamsum(stream, slen):
 	HASH_PRIME = 0x01000193
 	HASH_INIT = 0x28021967
 	ROLL_WINDOW = 7
-	B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-
-	roll_win = bytearray(ROLL_WINDOW)
-	roll_h1 = int()
-	roll_h2 = int()
-	roll_h3 = int()
-	roll_n = int()
-	block_size = int()
-	hash_string1 = str()
-	hash_string2 = str()
-	block_hash1 = int(HASH_INIT)
-	block_hash2 = int(HASH_INIT)
+	B64 = tuple('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/')
 
 	bs = BLOCKSIZE_MIN
 	while (bs * SPAMSUM_LENGTH) < slen:
@@ -65,6 +54,13 @@ def _spamsum(stream, slen):
 	while True:
 		if block_size < BLOCKSIZE_MIN:
 			raise RuntimeError('Calculated block size is too small')
+
+		roll_win = bytearray(ROLL_WINDOW)
+		roll_h1 = roll_h2 = roll_h3 = int()
+		roll_n = int()
+
+		block_hash1 = block_hash2 = int(HASH_INIT)
+		hash_string1 = hash_string2 = str()
 
 		stream.seek(0)
 		buf = stream.read(STREAM_BUFF_SIZE)
@@ -95,15 +91,7 @@ def _spamsum(stream, slen):
 
 		if block_size > BLOCKSIZE_MIN and len(hash_string1) < (SPAMSUM_LENGTH // 2):
 			block_size = (block_size // 2)
-
-			roll_win = bytearray(ROLL_WINDOW)
-			roll_h1 = roll_h2 = roll_h3 = int()
-			roll_n = int()
-
-			block_hash1 = block_hash2 = HASH_INIT
-			hash_string1 = hash_string2 = str()
 		else:
-			rh = roll_h1 + roll_h2 + roll_h3
 			if rh != 0:
 				hash_string1 += B64[block_hash1 % 64]
 				hash_string2 += B64[block_hash2 % 64]
@@ -262,3 +250,4 @@ if __name__ == '__main__':
 	else:
 		with open(0, 'rb') as f:
 			print(hash(f.read()))
+
