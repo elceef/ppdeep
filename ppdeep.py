@@ -122,9 +122,7 @@ def hash_from_file(filename):
 
 
 def _levenshtein(s, t):
-	'''
-	Implementation by Christopher P. Matthews
-	'''
+	# Implementation by Christopher P. Matthews
 	if s == t: return 0
 	elif len(s) == 0: return len(t)
 	elif len(t) == 0: return len(s)
@@ -142,49 +140,20 @@ def _levenshtein(s, t):
 	return v1[len(t)]
 
 
-class _RollState(object):
-	ROLL_WINDOW = 7
-
-	def __init__(self):
-		self.win = bytearray(self.ROLL_WINDOW)
-		self.h1 = int()
-		self.h2 = int()
-		self.h3 = int()
-		self.n = int()
-
-	def roll_hash(self, b):
-		self.h2 = self.h2 - self.h1 + (self.ROLL_WINDOW * b)
-		self.h1 = self.h1 + b - self.win[self.n % self.ROLL_WINDOW]
-		self.win[self.n % self.ROLL_WINDOW] = b
-		self.n += 1
-		self.h3 = (self.h3 << 5) & 0xFFFFFFFF
-		self.h3 ^= b
-		return self.h1 + self.h2 + self.h3
-
-
 def _common_substring(s1, s2):
 	ROLL_WINDOW = 7
-	hashes = list()
+	m = len(s1)
+	n = len(s2)
+	res = 0
 
-	roll = _RollState()
-	for i in range(len(s1)):
-		b = ord(s1[i])
-		hashes.append(roll.roll_hash(b))
+	for i in range(m):
+		for j in range(n):
+			cur = 0
+			while (i + cur) < m and (j + cur) < n and s1[i + cur] == s2[j + cur]:
+				cur += 1
+			res = max(res, cur)
 
-	roll = _RollState()
-	for i in range(len(s2)):
-		b = ord(s2[i])
-		rh = roll.roll_hash(b)
-		if i < (ROLL_WINDOW - 1):
-			continue
-		for j in range(ROLL_WINDOW-1, len(hashes)):
-			if hashes[j] != 0 and hashes[j] == rh:
-				ir = i - (ROLL_WINDOW - 1)
-				jr = j - (ROLL_WINDOW - 1)
-				if (len(s2[ir:]) >= ROLL_WINDOW and
-					s2[ir:ir+ROLL_WINDOW] == s1[jr:jr+ROLL_WINDOW]):
-					return True
-	return False
+	return True if res >= ROLL_WINDOW else False
 
 
 def _score_strings(s1, s2, block_size):
