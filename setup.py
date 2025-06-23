@@ -10,7 +10,9 @@ setup(
 	author='Marcin Ulikowski',
 	author_email='marcin@ulikowski.pl',
 	description='Pure-Python library for computing fuzzy hashes (ssdeep)',
+	license='ASL 2.0',
 	long_description=long_description,
+	long_description_content_type='text/markdown',
 	url='https://github.com/elceef/ppdeep',
 	py_modules=['ppdeep'],
 	classifiers=[
