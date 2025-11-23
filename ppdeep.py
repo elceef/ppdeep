@@ -32,6 +32,7 @@ __version__ = '20251115'
 __author__ = 'Marcin Ulikowski'
 
 import os
+from itertools import cycle
 from io import BytesIO
 
 
@@ -56,7 +57,7 @@ sum_table = [
 
 
 def _spamsum(stream, slen):
-	STREAM_BUFF_SIZE = 8192
+	STREAM_BUFF_SIZE = 65536
 	HASH_INIT = 0x27
 	ROLL_WINDOW = 7
 	B64 = tuple('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/')
@@ -70,9 +71,10 @@ def _spamsum(stream, slen):
 		if block_size < BLOCKSIZE_MIN:
 			raise RuntimeError('Calculated block size is too small')
 
-		roll_win = bytearray(ROLL_WINDOW)
+		roll_win = [0] * ROLL_WINDOW
 		roll_h1 = roll_h2 = roll_h3 = int()
 		roll_n = int()
+		roll_c = cycle(range(ROLL_WINDOW))
 
 		block_hash1 = block_hash2 = int(HASH_INIT)
 		hash_string1 = hash_string2 = str()
@@ -85,10 +87,10 @@ def _spamsum(stream, slen):
 				block_hash1 = sum_table[block_hash1][c]
 				block_hash2 = sum_table[block_hash2][c]
 
+				roll_n = next(roll_c)
 				roll_h2 = roll_h2 - roll_h1 + (ROLL_WINDOW * b)
-				roll_h1 = roll_h1 + b - roll_win[roll_n % ROLL_WINDOW]
-				roll_win[roll_n % ROLL_WINDOW] = b
-				roll_n += 1
+				roll_h1 = roll_h1 + b - roll_win[roll_n]
+				roll_win[roll_n] = b
 				roll_h3 = (roll_h3 << 5) & 0xFFFFFFFF
 				roll_h3 ^= b
 
