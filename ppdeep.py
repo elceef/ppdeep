@@ -28,7 +28,7 @@ limitations under the License.
 '''
 
 __title__ = 'ppdeep'
-__version__ = '20251115'
+__version__ = '20260209'
 __author__ = 'Marcin Ulikowski'
 
 import os
@@ -78,6 +78,8 @@ def _spamsum(stream, slen):
 
 		block_hash1 = block_hash2 = int(HASH_INIT)
 		hash_string1 = hash_string2 = str()
+		# Track the last character stored at each reset point (for rh==0 case at end)
+		last_char1 = last_char2 = str()
 
 		stream.seek(0)
 		buf = stream.read(STREAM_BUFF_SIZE)
@@ -88,21 +90,30 @@ def _spamsum(stream, slen):
 				block_hash2 = sum_table[block_hash2][c]
 
 				roll_n = next(roll_c)
-				roll_h2 = roll_h2 - roll_h1 + (ROLL_WINDOW * b)
-				roll_h1 = roll_h1 + b - roll_win[roll_n]
+				# Must use 32-bit unsigned arithmetic to match C's uint32_t behavior
+				# In C, subtraction that goes negative wraps to large positive values
+				roll_h2 = (roll_h2 - roll_h1 + (ROLL_WINDOW * b)) & 0xFFFFFFFF
+				roll_h1 = (roll_h1 + b - roll_win[roll_n]) & 0xFFFFFFFF
 				roll_win[roll_n] = b
-				roll_h3 = (roll_h3 << 5) & 0xFFFFFFFF
-				roll_h3 ^= b
+				roll_h3 = ((roll_h3 << 5) ^ b) & 0xFFFFFFFF
 
-				rh = roll_h1 + roll_h2 + roll_h3
+				rh = (roll_h1 + roll_h2 + roll_h3) & 0xFFFFFFFF
 
 				if (rh % block_size) == (block_size - 1):
+					# Always store the character (C stores to digest[dindex])
+					last_char1 = B64[block_hash1]
 					if len(hash_string1) < (SPAMSUM_LENGTH - 1):
-						hash_string1 += B64[block_hash1]
+						hash_string1 += last_char1
+						last_char1 = str()  # Clear after appending
 						block_hash1 = HASH_INIT
+						# Only track halfdigest while dindex < SPAMSUM_LENGTH/2
+						if len(hash_string1) < (SPAMSUM_LENGTH // 2):
+							last_char2 = str()  # Clear like C's halfdigest = '\0'
 					if (rh % (block_size * 2)) == ((block_size * 2) - 1):
+						last_char2 = B64[block_hash2]
 						if len(hash_string2) < ((SPAMSUM_LENGTH // 2) - 1):
-							hash_string2 += B64[block_hash2]
+							hash_string2 += last_char2
+							last_char2 = str()  # Clear after appending
 							block_hash2 = HASH_INIT
 
 			buf = stream.read(STREAM_BUFF_SIZE)
@@ -110,9 +121,17 @@ def _spamsum(stream, slen):
 		if block_size > BLOCKSIZE_MIN and len(hash_string1) < (SPAMSUM_LENGTH // 2):
 			block_size = (block_size // 2)
 		else:
+			# Append final character - two paths like C code:
+			# 1. If rh != 0: use current hash value
+			# 2. If rh == 0 but we have a stored char: use that
 			if rh != 0:
 				hash_string1 += B64[block_hash1]
 				hash_string2 += B64[block_hash2]
+			else:
+				if last_char1:
+					hash_string1 += last_char1
+				if last_char2:
+					hash_string2 += last_char2
 			break
 
 	return '{0}:{1}:{2}'.format(block_size, hash_string1, hash_string2)
