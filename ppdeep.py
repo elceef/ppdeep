@@ -28,7 +28,7 @@ limitations under the License.
 '''
 
 __title__ = 'ppdeep'
-__version__ = '20260209'
+__version__ = '20260217'
 __author__ = 'Marcin Ulikowski'
 
 import os
@@ -90,10 +90,8 @@ def _spamsum(stream, slen):
 				block_hash2 = sum_table[block_hash2][c]
 
 				roll_n = next(roll_c)
-				# Must use 32-bit unsigned arithmetic to match C's uint32_t behavior
-				# In C, subtraction that goes negative wraps to large positive values
-				roll_h2 = (roll_h2 - roll_h1 + (ROLL_WINDOW * b)) & 0xFFFFFFFF
-				roll_h1 = (roll_h1 + b - roll_win[roll_n]) & 0xFFFFFFFF
+				roll_h2 = roll_h2 - roll_h1 + (ROLL_WINDOW * b)
+				roll_h1 = roll_h1 + b - roll_win[roll_n]
 				roll_win[roll_n] = b
 				roll_h3 = ((roll_h3 << 5) ^ b) & 0xFFFFFFFF
 
