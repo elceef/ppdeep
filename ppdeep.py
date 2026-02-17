@@ -55,6 +55,10 @@ sum_table = [
 	[f_table[a] ^ b for b in range(0, 64)] for a in range(0, 64)
 ]
 
+byte_table = [
+	[sum_table[h][b & 0x3F] for h in range(0, 64)] for b in range(0, 256)
+]
+
 
 def _spamsum(stream, slen):
 	STREAM_BUFF_SIZE = 65536
@@ -84,9 +88,8 @@ def _spamsum(stream, slen):
 		buf = stream.read(STREAM_BUFF_SIZE)
 		while buf:
 			for b in buf:
-				c = b & 0x3F
-				block_hash1 = sum_table[block_hash1][c]
-				block_hash2 = sum_table[block_hash2][c]
+				block_hash1 = byte_table[b][block_hash1]
+				block_hash2 = byte_table[b][block_hash2]
 
 				roll_n = next(roll_c)
 				roll_h2 = roll_h2 - roll_h1 + (ROLL_WINDOW * b)
