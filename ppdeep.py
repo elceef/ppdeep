@@ -78,6 +78,7 @@ def _spamsum(stream, slen):
 
 		block_hash1 = block_hash2 = int(HASH_INIT)
 		hash_string1 = hash_string2 = str()
+		last_char1 = last_char2 = str()
 
 		stream.seek(0)
 		buf = stream.read(STREAM_BUFF_SIZE)
@@ -94,16 +95,20 @@ def _spamsum(stream, slen):
 				roll_h3 = (roll_h3 << 5) & 0xFFFFFFFF
 				roll_h3 ^= b
 
-				rh = roll_h1 + roll_h2 + roll_h3
+				rh = (roll_h1 + roll_h2 + roll_h3) & 0xFFFFFFFF
 
 				if (rh % block_size) == (block_size - 1):
+					last_char1 = B64[block_hash1]
 					if len(hash_string1) < (SPAMSUM_LENGTH - 1):
 						hash_string1 += B64[block_hash1]
 						block_hash1 = HASH_INIT
+						last_char1 = str()
 					if (rh % (block_size * 2)) == ((block_size * 2) - 1):
+						last_char2 = B64[block_hash2]
 						if len(hash_string2) < ((SPAMSUM_LENGTH // 2) - 1):
 							hash_string2 += B64[block_hash2]
 							block_hash2 = HASH_INIT
+							last_char2 = str()
 
 			buf = stream.read(STREAM_BUFF_SIZE)
 
@@ -113,6 +118,9 @@ def _spamsum(stream, slen):
 			if rh != 0:
 				hash_string1 += B64[block_hash1]
 				hash_string2 += B64[block_hash2]
+			else:
+				hash_string1 += last_char1
+				hash_string2 += last_char2
 			break
 
 	return '{0}:{1}:{2}'.format(block_size, hash_string1, hash_string2)
