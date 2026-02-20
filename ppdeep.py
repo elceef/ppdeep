@@ -70,6 +70,7 @@ def _spamsum(stream, slen):
 	while (bs * SPAMSUM_LENGTH) < slen:
 		bs = bs * 2
 	block_size = bs
+	rh = 0
 
 	while True:
 		if block_size < BLOCKSIZE_MIN:
